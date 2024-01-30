@@ -1,10 +1,155 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<module type="PYTHON_MODULE" version="4">
-  <component name="NewModuleRootManager">
-    <content url="file://$MODULE_DIR$">
-      <excludeFolder url="file://$MODULE_DIR$/venv" />
-    </content>
-    <orderEntry type="inheritedJdk" />
-    <orderEntry type="sourceFolder" forTests="false" />
-  </component>
-</module>
+#Connection with OpenAI's API.
+
+import json
+import random
+
+from openai import OpenAI
+
+TEST_OPENAI_API_KEY = "Your OpenAI API."
+
+def get_llm_response(user_prompt, system_prompt):
+    client = OpenAI(api_key=TEST_OPENAI_API_KEY)
+
+    completion = client.chat.completions.create(
+        model="gpt-3.5-turbo",
+        messages=[
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": user_prompt},
+        ],
+        max_tokens=40, #Here is a control for the size of the message from the character.
+        stop="\n"
+    )
+
+    return completion.choices[0].message.content
+
+universe = {
+        "locations":
+        {
+            "RECEPTION": "a big room in Alice's house with a big table, TV, and a fireplace",
+            "KITCHEN": "a cozy kitchen in Alice's house",
+            "HALL": "a long hall in Alice's house",
+            "PARK": "a park near Alice's house",
+            "SCHOOL": "a school near Alice's house",
+        },
+    
+        "time":
+        [
+            "MORNING",
+            "DAY",
+            "EVENING",
+            "DUSK",
+            "NIGHT", 
+        ],
+    
+        "characters":
+        {
+            "ALICE": "7-year-old girl, very curious",
+            "JACK": "Boy. Alice's brother, 10 years old, likes to play with his friends",
+            "BOB": "Man. Alice's and Jack's father, a programmer",
+            "MARY": "Woman. Alice's and Jack's mother, a teacher",
+            "DAVID": "7-year-old boy. Alice's best friend",
+        },
+
+        "emotions":
+        [
+            "happy",
+            "sad",
+            "angry",
+            "surprised",
+            "scared",
+            "excited",
+            "calm",
+            "disappointed",
+            "shy",
+            "loving",
+        ]
+    }
+
+#Generation one replic for one character.
+
+def generate_replica(prompt, location, time, character, emotion):
+    
+    system_prompt = f"You are a {character}. You are in {location}. You are in {time}. Your emotion is {emotion}. Generate dialog with second character."
+    user_prompt = f"{prompt} {emotion}"
+
+    response = get_llm_response(user_prompt, system_prompt)
+
+    return response
+
+#Function print only one dialogue between two characters in one scene.
+
+def print_full_dialogue(universe):
+    
+    location = random.choice(list(universe["locations"].keys()))
+    time = random.choice(universe["time"])
+    character = random.sample(list(universe["characters"].keys()), 2)
+    emotion = random.choice(universe["emotions"])
+    prompt = f"You are {emotion} wander around looking for something to do and meet {characters[1]}."
+    
+    # Print scene header in bold
+    scene_header = f"\033[1m{location} — {time}\033[0m"
+    print(scene_header)
+    print()
+
+    all_replicas = ""
+    first_character_replica1 = generate_replica(prompt, location, time, character[0], f"({emotion})")
+    print(first_character_replica1)
+    all_replicas += first_character_replica1
+
+    print()
+
+    emotion = random.choice(universe["emotions"])
+    second_character_replica1 = generate_replica(all_replicas, location, time, character[1], f"({emotion})")
+    print(second_character_replica1)
+    all_replicas += second_character_replica1
+
+    print()
+
+    emotion = random.choice(universe["emotions"])
+    first_character_replica2 = generate_replica(all_replicas, location, time, character[0], f"({emotion})")
+    print(first_character_replica2)
+    all_replicas += first_character_replica2
+
+    print()
+
+    emotion = random.choice(universe["emotions"])
+    second_character_replica2 = generate_replica(all_replicas, location, time, character[1], f"({emotion})")
+    print(second_character_replica2)
+    all_replicas += second_character_replica2
+
+    print()
+
+    emotion = random.choice(universe["emotions"])
+    
+    first_character_replica3 = generate_replica(all_replicas, location, time, character[0], f"({emotion})")
+    print(first_character_replica3)
+    all_replicas += first_character_replica3
+
+    print()
+
+    emotion = random.choice(universe["emotions"])
+    second_character_replica3 = generate_replica(all_replicas, location, time, character[1], f"({emotion})")
+    print(second_character_replica3)
+    all_replicas += second_character_replica3
+
+#I leave it here only for test quality of dialogue.
+
+#print_full_dialogue(universe)
+
+#Function print dialogues between two characters in all scenes.
+
+def generate_movie_script(prompt, universe):
+    counter = 0
+    while True:
+        print_full_dialogue(universe)
+        print("\n")
+        counter += 1
+        if counter >= len(universe["locations"]):
+            break
+
+#I leave it here only for test quality of script.
+
+#generate_movie_script("Make small cartoon's script with linked locations and characters.", universe)
+
+generated_script = generate_movie_script(prompt, universe)
+print(json.dumps(generated_script, indent=4))
